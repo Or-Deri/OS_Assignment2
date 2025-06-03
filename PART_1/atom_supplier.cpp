@@ -50,14 +50,12 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // 4) Connect to the server
     if (connect(sock, (sockaddr*)&serv, sizeof(serv)) < 0) {
         perror("connect");
         close(sock);
         return 1;
     }
 
-    // 5) Interactive loop
     while (true) {
         std::cout << "\nSelect atom type:\n"
                   << " 1) HYDROGEN\n"
@@ -83,10 +81,10 @@ int main(int argc, char* argv[]) {
         }
 
         std::cout << "Enter amount: ";
-        
+
         unsigned int amt;
         if (!(std::cin >> amt)) {
-            std::cin.clear();                // clear the error flag
+            std::cin.clear();            
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cout << "Invalid number\n";
             continue;
