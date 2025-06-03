@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <limits>
 
 
 static const size_t MAX_LINE = 1024;
@@ -23,9 +24,10 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // 1) Parse hostname/IP and port
     const char* host = argv[1];
     int port = std::atoi(argv[2]);
+
+
     if (port <= 0 || port > 65535) {
         std::cerr << "Invalid port number.\n";
         return 1;
@@ -81,6 +83,7 @@ int main(int argc, char* argv[]) {
         }
 
         std::cout << "Enter amount: ";
+        
         unsigned int amt;
         if (!(std::cin >> amt)) {
             std::cin.clear();                // clear the error flag

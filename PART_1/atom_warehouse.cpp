@@ -150,9 +150,9 @@ int main(int argc, char* argv[]) {
 
                         bool success = false;
                         if ((iss >> cmd >> atom_type >> amt) && cmd == "ADD") {
-                            // Validate atom type
+                            
                             if (warehouse.is_valid_atom(atom_type)) {
-                                // Try to add
+                                
                                 if (warehouse.add_atom(atom_type, static_cast<unsigned int>(amt))) {
                                     success = true;
                                 }
@@ -160,10 +160,12 @@ int main(int argc, char* argv[]) {
                         }
 
                         if (success) {
+                            warehouse.print_state();
                             const char* resp = "OK\n";
                             send(fd, resp, std::strlen(resp), 0);
                         }
                         else {
+                            warehouse.print_state();
                             const char* resp = "ERROR\n";
                             send(fd, resp, std::strlen(resp), 0);
                         }
