@@ -102,27 +102,37 @@ int main(int argc, char* argv[]) {
 
 
     fd_set master_set;
-    fd_set read_set;
+    fd_set read_fds;
     FD_ZERO(&master_set);
     FD_SET(listener, &master_set);
     FD_SET(udp_listener, &master_set);
-    int fd_max = std::max(listener, udp_listener);
 
+    FD_SET(STDIN_FILENO, &master_set);
+    int fd_max = listener;
+    if (udp_listener > fd_max){
+        fd_max = udp_listener;
+    }
+    if (STDIN_FILENO > fd_max){
+        fd_max = STDIN_FILENO;
+    }
     std::unordered_map<int, std::string> bufmap;
 
     // Single shared Warehouse instance
     Warehouse warehouse;
 
     while (true) {
-        read_set = master_set;
-        if (select(fd_max + 1, &read_set, nullptr, nullptr, nullptr) < 0) {
+        read_fds = master_set;
+        if (select(fd_max + 1, &read_fds, nullptr, nullptr, nullptr) < 0) {
             perror("select");
             break;
         }
 
         //  Check each fd
         for (int fd = 0; fd <= fd_max; ++fd) {
-            if (!FD_ISSET(fd, &read_set)) {
+            if (!FD_ISSET(fd, &read_fds)) {
+                continue;
+            }
+            if (fd == STDIN_FILENO){
                 continue;
             }
             //UDP request arrived
@@ -244,74 +254,151 @@ int main(int argc, char* argv[]) {
                             line.pop_back();
                         }
 
-                        // Parse "ADD <ATOM> <amount>"
-                        std::istringstream iss(line);
-                        std::string cmd, atom_type;
-                        unsigned long long amt = 0;
-                        bool success = false;
-
-                        if ((iss >> cmd >> atom_type >> amt) && cmd == "ADD") {
-                            if (warehouse.is_valid_atom(atom_type)) {
-                                if (warehouse.add_atom(atom_type, static_cast<unsigned int>(amt))) {
-                                    success = true;
-                                }
-                            }
-                        }
-
-                        const char* resp = success ? "OK\n" : "ERROR\n";
-                        send(fd, resp, std::strlen(resp), 0);
-                        warehouse.print_state();
-
 
                         std::istringstream iss(line);
                         std::string cmd;
                         iss >> cmd;
 
-                        bool success = false;
                         if (cmd == "ADD") {
-                    
                             std::string atom_type;
                             unsigned long long amt = 0;
-                        
+                            bool success = false;
+
                             if ((iss >> atom_type >> amt) && warehouse.is_valid_atom(atom_type)) {
                                 success = warehouse.add_atom(atom_type, static_cast<unsigned int>(amt));
                             }
-                
                             const char* resp = success ? "OK\n" : "ERROR\n";
                             send(fd, resp, std::strlen(resp), 0);
                             warehouse.print_state();
-
-                        } 
+                        }
                         else if (cmd == "GEN") {
                             
                             std::string drink_type;
                             std::getline(iss, drink_type);
-                        
-                            if (!drink_type.empty() && drink_type.front() == ' ') {
+                            if (!drink_type.empty() && drink_type.front() == ' ')
                                 drink_type.erase(0, 1);
-                            }
 
-                            if (warehouse.is_valid_drink(drink_type)) {
-                                unsigned int maxd = warehouse.max_creatable_drinks(drink_type);
+                            if (drink_type == "CHAMPAGNE" || drink_type == "VODKA" || drink_type == "SOFT DRINK") {
+                                int maxd = warehouse.build_drink_amount(drink_type);
                                 std::string resp = std::to_string(maxd) + "\n";
                                 send(fd, resp.c_str(), resp.size(), 0);
-                            }
-                            else{
+                            } else {
                                 send(fd, "ERROR\n", 6, 0);
                             }
-                            
-                            warehouse.print_state();
 
-                        } 
-                        else{
+                        }
+                        else {
                             send(fd, "ERROR\n", 6, 0);
                         }
+
+
+                        // // Parse "ADD <ATOM> <amount>"
+                        // std::istringstream iss(line);
+                        // std::string cmd, atom_type;
+                        // unsigned long long amt = 0;
+                        // bool success = false;
+
+                        // if ((iss >> cmd >> atom_type >> amt) && cmd == "ADD") {
+                        //     if (warehouse.is_valid_atom(atom_type)) {
+                        //         if (warehouse.add_atom(atom_type, static_cast<unsigned int>(amt))) {
+                        //             success = true;
+                        //         }
+                        //     }
+                        // }
+
+                        // const char* resp = success ? "OK\n" : "ERROR\n";
+                        // send(fd, resp, std::strlen(resp), 0);
+                        // warehouse.print_state();
+
+
+                        // std::istringstream iss(line);
+                        // std::string cmd;
+                        // iss >> cmd;
+
+                        // bool success = false;
+                        // if (cmd == "ADD") {
+                    
+                        //     std::string atom_type;
+                        //     unsigned long long amt = 0;
+                        
+                        //     if ((iss >> atom_type >> amt) && warehouse.is_valid_atom(atom_type)) {
+                        //         success = warehouse.add_atom(atom_type, static_cast<unsigned int>(amt));
+                        //     }
+                
+                        //     const char* resp = success ? "OK\n" : "ERROR\n";
+                        //     send(fd, resp, std::strlen(resp), 0);
+                        //     warehouse.print_state();
+
+                        // } 
+                        // else if (cmd == "GEN") {
+                            
+                        //     std::string drink_type;
+                        //     std::getline(iss, drink_type);
+                        
+                        //     if (!drink_type.empty() && drink_type.front() == ' ') {
+                        //         drink_type.erase(0, 1);
+                        //     }
+
+                        //     if (drink_type == "CHAMPAGNE" || drink_type == "VODKA" || drink_type == "SOFT DRINK") {
+                        //         unsigned int maxd = warehouse.build_drink_amount(drink_type);
+                        //         std::string resp = std::to_string(maxd) + "\n";
+                        //         send(fd, resp.c_str(), resp.size(), 0);
+                        //     }
+                        //     else{
+                        //         send(fd, "ERROR\n", 6, 0);
+                        //     }
+
+                        //     warehouse.print_state();
+                        // } 
+                        // else{
+                        //     send(fd, "ERROR\n", 6, 0);
+                        // }
 
 
                     }
                 }
             }
         }
+
+
+        if (FD_ISSET(STDIN_FILENO, &read_fds)) {
+            std::string line;
+            if (std::getline(std::cin, line)) {
+                // כאן נטפל בשורה שהוקלדה כ-ADD או GEN
+                std::istringstream iss(line);
+                std::string cmd;
+                iss >> cmd;
+
+                if (cmd == "ADD") {
+                    std::string atom_type;
+                    unsigned long long amt = 0;
+                    bool success = false;
+                    if ((iss >> atom_type >> amt) && warehouse.is_valid_atom(atom_type)) {
+                        success = warehouse.add_atom(atom_type, static_cast<unsigned int>(amt));
+                    }
+                    std::cout << (success ? "OK\n" : "ERROR\n");
+                    warehouse.print_state();
+                }
+                else if (cmd == "GEN") {
+                    std::string drink_type;
+                    std::getline(iss, drink_type);
+                    if (!drink_type.empty() && drink_type.front() == ' ')
+                        drink_type.erase(0, 1);
+
+                    if (drink_type == "CHAMPAGNE" || drink_type == "VODKA" || drink_type == "SOFT DRINK") {
+                        int maxd = warehouse.build_drink_amount(drink_type);
+                        std::cout << maxd << "\n";
+                    } else {
+                        std::cout << "ERROR\n";
+                    }
+                    
+                }
+                else {
+                    std::cout << "ERROR\n";
+                }
+            }
+        }
+
     }
 
     // Cleanup
