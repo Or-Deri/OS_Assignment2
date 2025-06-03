@@ -22,15 +22,15 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // 1) Parse hostname/IP and port
     const char* host = argv[1];
     int port = std::atoi(argv[2]);
+
+
     if (port <= 0 || port > 65535) {
         std::cerr << "Invalid port number.\n";
         return 1;
     }
 
-    // 2) Create a TCP socket
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
         perror("socket");

@@ -25,15 +25,12 @@ WareHouse can supply the following molecules -
 // CarbonDioxide - CO2
 // GLOCOUS - C6H12O6
 // ETHNOL - C2H6O
-
 */
 
 class Warehouse {
 private:
 
     std::unordered_map<std::string, unsigned long long> atoms;
-    std::unordered_map<std::string, unsigned long long> molecules;
-
     mutable std::mutex mtx;
 
     std::vector<std::string> mol_available = {"WATER", "CARBON DIOXIDE", "ALCOHOL", "GLUCOSE"};
@@ -48,8 +45,6 @@ public:
 
     bool add_atom(const std::string& type, unsigned int amount);
 
-    bool deliver_atom(const std::string& atom_type, unsigned int amou);
-
     bool build_molecules(const std::string molecule_type);
 
     void print_state() const;
@@ -58,11 +53,7 @@ public:
 
     bool is_valid_molecule(const std::string& mol) const;
 
-    bool is_valid_drink(const std::string& drink_type) const;
-
-    bool deliver_molecules(const std::string& molecule_type, unsigned int amount);
-
-    int build_drink_amount(const std::string drink_type) const;
+    int build_drink_amount(const std::string& drink_type) const;
 
 };
 
