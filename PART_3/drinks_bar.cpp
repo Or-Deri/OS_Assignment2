@@ -137,6 +137,7 @@ int main(int argc, char* argv[]) {
             }
             //UDP request arrived
             if (fd == udp_listener) {
+
                 char buffer[MAX_LINE];
                 sockaddr_in client_addr{};
                 socklen_t client_len = sizeof(client_addr);
@@ -210,7 +211,7 @@ int main(int argc, char* argv[]) {
                     warehouse.print_state();
                 }
             }
-            // TCP listener ready? Accept new connection
+            //if TCP listener ready Accept new connection
             else if (fd == listener) {
                 sockaddr_in client_addr{};
                 socklen_t client_len = sizeof(client_addr);
@@ -290,70 +291,6 @@ int main(int argc, char* argv[]) {
                         else {
                             send(fd, "ERROR\n", 6, 0);
                         }
-
-
-                        // // Parse "ADD <ATOM> <amount>"
-                        // std::istringstream iss(line);
-                        // std::string cmd, atom_type;
-                        // unsigned long long amt = 0;
-                        // bool success = false;
-
-                        // if ((iss >> cmd >> atom_type >> amt) && cmd == "ADD") {
-                        //     if (warehouse.is_valid_atom(atom_type)) {
-                        //         if (warehouse.add_atom(atom_type, static_cast<unsigned int>(amt))) {
-                        //             success = true;
-                        //         }
-                        //     }
-                        // }
-
-                        // const char* resp = success ? "OK\n" : "ERROR\n";
-                        // send(fd, resp, std::strlen(resp), 0);
-                        // warehouse.print_state();
-
-
-                        // std::istringstream iss(line);
-                        // std::string cmd;
-                        // iss >> cmd;
-
-                        // bool success = false;
-                        // if (cmd == "ADD") {
-                    
-                        //     std::string atom_type;
-                        //     unsigned long long amt = 0;
-                        
-                        //     if ((iss >> atom_type >> amt) && warehouse.is_valid_atom(atom_type)) {
-                        //         success = warehouse.add_atom(atom_type, static_cast<unsigned int>(amt));
-                        //     }
-                
-                        //     const char* resp = success ? "OK\n" : "ERROR\n";
-                        //     send(fd, resp, std::strlen(resp), 0);
-                        //     warehouse.print_state();
-
-                        // } 
-                        // else if (cmd == "GEN") {
-                            
-                        //     std::string drink_type;
-                        //     std::getline(iss, drink_type);
-                        
-                        //     if (!drink_type.empty() && drink_type.front() == ' ') {
-                        //         drink_type.erase(0, 1);
-                        //     }
-
-                        //     if (drink_type == "CHAMPAGNE" || drink_type == "VODKA" || drink_type == "SOFT DRINK") {
-                        //         unsigned int maxd = warehouse.build_drink_amount(drink_type);
-                        //         std::string resp = std::to_string(maxd) + "\n";
-                        //         send(fd, resp.c_str(), resp.size(), 0);
-                        //     }
-                        //     else{
-                        //         send(fd, "ERROR\n", 6, 0);
-                        //     }
-
-                        //     warehouse.print_state();
-                        // } 
-                        // else{
-                        //     send(fd, "ERROR\n", 6, 0);
-                        // }
-
 
                     }
                 }
