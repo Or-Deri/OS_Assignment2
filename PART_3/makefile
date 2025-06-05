@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 CXX = g++
+=======
+CXX      = g++
+>>>>>>> 45475baa99a557346cfe4ed41950f7df8e9fdd5e
 CXXFLAGS = -std=c++17 -Wall -Wextra -g -I../WareHouse
 
 all: atom_supplier drinks_bar molecule_requester

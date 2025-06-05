@@ -37,7 +37,11 @@ int main(int argc, char* argv[]) {
     }
 
     int opt = 1;  //
+<<<<<<< HEAD
     setsockopt(udp_listener, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+=======
+    setsockopt(udp_listener, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));//
+>>>>>>> 45475baa99a557346cfe4ed41950f7df8e9fdd5e
 
 
     sockaddr_in udp_addr{};

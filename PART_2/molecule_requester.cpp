@@ -46,10 +46,17 @@ int main(int argc, char* argv[]) {
         ALCOHOL NEEDS 2 C + 6 H + 1 O
         GLUCOSE NEEDS 6 C + 12 H + 6 O
         */
+<<<<<<< HEAD
         std::cout << "Which molecule do you want to request ? - WATER | CARBON DIOXIDE | ALCOHOL | GLUCOSE: ";
         
         std::cin >> std::ws;
         std::getline(std::cin, molecule);
+=======
+        std::cout << "Molecule to request (WATER / CARBON DIOXIDE / ALCOHOL / GLUCOSE): ";
+        //std::cin >> molecule;
+        std::cin >> std::ws;//
+        std::getline(std::cin, molecule);//
+>>>>>>> 45475baa99a557346cfe4ed41950f7df8e9fdd5e
 
         std::cout << "Amount: ";
         //std::cin >> amount;
@@ -78,9 +85,13 @@ int main(int argc, char* argv[]) {
         }
 
         char buffer[MAX_LINE];
+<<<<<<< HEAD
 
         socklen_t len = sizeof(serv);
         
+=======
+        socklen_t len = sizeof(serv);
+>>>>>>> 45475baa99a557346cfe4ed41950f7df8e9fdd5e
         ssize_t n = recvfrom(sock, buffer, sizeof(buffer) - 1, 0,(sockaddr*)&serv, &len);
         
         if (n > 0) {

@@ -37,6 +37,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    if (port <= 0 || port > 65535) {
+        std::cerr << "Invalid port number.\n";
+        return 1;
+    }
+
     // UDP 
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0) {

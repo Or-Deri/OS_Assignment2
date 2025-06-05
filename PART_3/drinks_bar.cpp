@@ -195,8 +195,11 @@ int main(int argc, char* argv[]) {
                     warehouse.print_state();
                 }
             }
+<<<<<<< HEAD
 
             
+=======
+>>>>>>> 45475baa99a557346cfe4ed41950f7df8e9fdd5e
             //if TCP listener ready Accept new connection
             else if (fd == listener) {
                 sockaddr_in client_addr{};
@@ -285,6 +288,7 @@ int main(int argc, char* argv[]) {
 
 
         if (FD_ISSET(STDIN_FILENO, &read_fds)) {
+<<<<<<< HEAD
 
 
             std::string line;
@@ -293,6 +297,15 @@ int main(int argc, char* argv[]) {
                 std::string cmd;
                 iss >> cmd;
 
+=======
+            std::string line;
+            if (std::getline(std::cin, line)) {
+                // כאן נטפל בשורה שהוקלדה כ-ADD או GEN
+                std::istringstream iss(line);
+                std::string cmd;
+                iss >> cmd;
+
+>>>>>>> 45475baa99a557346cfe4ed41950f7df8e9fdd5e
                 if (cmd == "ADD") {
                     std::string atom_type;
                     unsigned long long amt = 0;

@@ -1,3 +1,14 @@
+<<<<<<< HEAD
+=======
+// atom_supplier_client.cpp
+//
+// A simple interactive TCP client that connects to the "atom_warehouse" server.
+// Usage: ./atom_supplier_client <hostname/IP> <port>
+//
+// Repeatedly asks the user to choose an atom type and amount, then sends
+// "ADD <ATOM> <amount>\n" over the socket and prints the server's response.
+//
+>>>>>>> 45475baa99a557346cfe4ed41950f7df8e9fdd5e
 #include <limits>
 #include <iostream>
 #include <string>
@@ -33,17 +44,28 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+<<<<<<< HEAD
+=======
+    // 3) Resolve hostname + port בעזרת getaddrinfo
+>>>>>>> 45475baa99a557346cfe4ed41950f7df8e9fdd5e
     struct addrinfo hints;
     struct addrinfo *res, *rp;
     int err;
 
     memset(&hints, 0, sizeof(hints));
+<<<<<<< HEAD
     // ipv4
     hints.ai_family   = AF_UNSPEC; 
 
     // sock type of TCP because of STREAM
     hints.ai_socktype = SOCK_STREAM;  
 
+=======
+    hints.ai_family   = AF_UNSPEC;      // IPv4 או IPv6
+    hints.ai_socktype = SOCK_STREAM;    // TCP
+
+    // argv[2] מכיל כבר את הטקסט של הפורט (כמו "5000")
+>>>>>>> 45475baa99a557346cfe4ed41950f7df8e9fdd5e
     err = getaddrinfo(host, argv[2], &hints, &res);
     if (err != 0) {
         std::cerr << "getaddrinfo: " << gai_strerror(err) << "\n";
@@ -72,6 +94,27 @@ int main(int argc, char* argv[]) {
     }
 
     freeaddrinfo(res);
+<<<<<<< HEAD
+=======
+    // עכשיו sock הוא סוקט מחובר לשרת המתאים
+
+    // // 3) Fill in server address structure
+    // sockaddr_in serv{};
+    // serv.sin_family = AF_INET;
+    // serv.sin_port = htons(port);
+    // if (inet_pton(AF_INET, host, &serv.sin_addr) <= 0) {
+    //     perror("inet_pton");
+    //     close(sock);
+    //     return 1;
+    // }
+
+    // // 4) Connect to the server
+    // if (connect(sock, (sockaddr*)&serv, sizeof(serv)) < 0) {
+    //     perror("connect");
+    //     close(sock);
+    //     return 1;
+    // }
+>>>>>>> 45475baa99a557346cfe4ed41950f7df8e9fdd5e
 
     // 5) Interactive loop
     while (true) {

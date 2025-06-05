@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #compiler
 CXX = g++
 
@@ -5,6 +6,11 @@ CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -g -I../WareHouse --coverage
 
 #targets
+=======
+CXX      = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -I../WareHouse
+
+>>>>>>> 45475baa99a557346cfe4ed41950f7df8e9fdd5e
 all: atom_supplier molecule_supplier molecule_requester
 
 atom_supplier: atom_supplier.cpp

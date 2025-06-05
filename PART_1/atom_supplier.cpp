@@ -38,7 +38,11 @@ int main(int argc, char* argv[]) {
     int err;
 
     memset(&hints, 0, sizeof(hints));
+<<<<<<< HEAD
     hints.ai_family= AF_INET;     
+=======
+    hints.ai_family   = AF_UNSPEC;     
+>>>>>>> 45475baa99a557346cfe4ed41950f7df8e9fdd5e
     hints.ai_socktype = SOCK_STREAM;   
 
     err = getaddrinfo(host, argv[2], &hints, &res);
@@ -51,8 +55,11 @@ int main(int argc, char* argv[]) {
 
     for (rp = res; rp != nullptr; rp = rp->ai_next) {
 
+<<<<<<< HEAD
 
         // what is the last argument in th
+=======
+>>>>>>> 45475baa99a557346cfe4ed41950f7df8e9fdd5e
         sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
         if (sock < 0) {
             continue;
