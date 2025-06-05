@@ -1,18 +1,16 @@
-CC = g++
-CXX =  -std=c++17 -Wall -Wextra -g -I../WareHouse --coverage
-
-SOURCE =  atom_supplier drinks_bar molecule_requester
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -I../WareHouse --coverage
 
 all: atom_supplier drinks_bar molecule_requester
 
 atom_supplier: atom_supplier.cpp
-	$(CXX) $(CXXFLAGS) -o atom_supplier atom_supplier.cpp
+    $(CXX) $(CXXFLAGS) -o atom_supplier atom_supplier.cpp
 
 drinks_bar: drinks_bar.cpp ../WareHouse/WareHouse.cpp ../WareHouse/WareHouse.hpp
-	$(CXX) $(CXXFLAGS) -o drinks_bar drinks_bar.cpp ../WareHouse/WareHouse.cpp
+    $(CXX) $(CXXFLAGS) -o drinks_bar drinks_bar.cpp ../WareHouse/WareHouse.cpp
 
 molecule_requester: molecule_requester.cpp
-	$(CXX) $(CXXFLAGS) -o molecule_requester molecule_requester.cpp
-	
+    $(CXX) $(CXXFLAGS) -o molecule_requester molecule_requester.cpp
+    
 clean:
-	rm -f atom_supplier drinks_bar molecule_requester
+    rm -f atom_supplier drinks_bar molecule_requester
