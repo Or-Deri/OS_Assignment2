@@ -160,14 +160,12 @@ int main(int argc, char *argv[])
     Warehouse warehouse;
 
     // if atoms were specified, set them in the warehouse
-    //
+
     warehouse.add_atom("OXYGEN", OXYGEN_ATOMS);
     warehouse.add_atom("HYDROGEN", HYDROGEN_ATOMS);
     warehouse.add_atom("CARBON", CARBON_ATOMS);
 
-    std::cout << "Server started";
-    std::cout << " on TCP port " << tcp_p;
-    std::cout << " and UDP port " << udp_p;
+std::cout << "Server started on TCP port " << tcp_p << " and UDP port " << udp_p << std::endl;
 
     timeval timeout{};
 

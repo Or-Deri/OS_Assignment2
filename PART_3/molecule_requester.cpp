@@ -45,15 +45,27 @@ int main(int argc, char* argv[]) {
         unsigned int amount;
 
         /*
+        
         WATER NEED 2 H + 1 C
         CARBON DIOXIDE NEECDS 1 C + 2 O
         ALCOHOL NEEDS 2 C + 6 H + 1 O
         GLUCOSE NEEDS 6 C + 12 H + 6 O
+
+
         */
-        std::cout << "Molecule to request (WATER / CARBON DIOXIDE / ALCOHOL / GLUCOSE): ";
-        //std::cin >> molecule;
-        std::cin >> std::ws;//
-        std::getline(std::cin, molecule);//
+
+        std::cout << "Which molecule do you want to request ? - WATER | CARBON DIOXIDE | ALCOHOL | GLUCOSE " << std::endl;
+        std::cout << "Type quit to exit the program " << std::endl;
+
+        std::cin >> std::ws;
+        std::getline(std::cin, molecule);
+
+        
+        if (molecule == "quit") 
+        {
+            std::cout << "Exiting the program" << std::endl;
+            break;
+        }
 
         std::cout << "Amount: ";
         //std::cin >> amount;

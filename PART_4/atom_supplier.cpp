@@ -31,7 +31,8 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    if (port <= 0 || port > 65535) {
+    int port_num = std::stoi(port);
+    if (port_num <= 0 || port_num > 65535) {
         std::cerr << "Invalid port number.\n";
         return 1;
     }
@@ -60,7 +61,7 @@ int main(int argc, char* argv[]) {
     hints.ai_socktype = SOCK_STREAM;  
 
 
-    err = getaddrinfo(host, argv[2], &hints, &res);
+    err = getaddrinfo(host.c_str(), port.c_str(), &hints, &res);
 
     if (err != 0) {
         std::cerr << "getaddrinfo: " << gai_strerror(err) << "\n";

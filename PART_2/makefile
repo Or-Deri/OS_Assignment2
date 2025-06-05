@@ -17,4 +17,5 @@ molecule_requester: molecule_requester.cpp
 	$(CXX) $(CXXFLAGS) -o molecule_requester molecule_requester.cpp
 
 clean:
-	rm -f atom_supplier molecule_supplier molecule_requester
+	rm -f atom_supplier molecule_supplier molecule_requester *.gcno *.gcov *.gcda;
+	.PHONY: all run clean

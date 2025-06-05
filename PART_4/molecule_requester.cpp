@@ -7,30 +7,13 @@
 static const size_t MAX_LINE = 1024;
 
 int main(int argc, char* argv[]) {
-
-    std::string host;
-    std::string port;
-    int opt;
-
-    while((opt = getopt(argc,argv, "h:p:")) != -1)
-    {
-        switch(opt)
-        {
-            case 'h':
-                host = optarg;
-                break;
-            case 'p':
-                port = optarg;
-                break;
-            default:
-                std::cerr << "Usage: " << argv[0] << " -h <hostname> -p <udp_port>\n";
-                return 1;
-        }
-    }
-    if (host.empty() || port.empty()) {
-        std::cerr << "Hostname and port must be specified.\n";
+    if (argc != 3) {
+        std::cerr << "Usage: " << argv[0] << " <hostname> <udp_port>\n";
         return 1;
     }
+
+    const char* hostname = argv[1];
+    int port = std::stoi(argv[2]);
 
     if (port <= 0 || port > 65535) {
         std::cerr << "Invalid port number.\n";
@@ -63,16 +46,23 @@ int main(int argc, char* argv[]) {
         ALCOHOL NEEDS 2 C + 6 H + 1 O
         GLUCOSE NEEDS 6 C + 12 H + 6 O
         */
-        std::cout << "Molecule to request (WATER / CARBON DIOXIDE / ALCOHOL / GLUCOSE): ";
-        //std::cin >> molecule;
-        std::cin >> std::ws;//
-        std::getline(std::cin, molecule);//
 
-        std::cout << "Amount: ";
-        //std::cin >> amount;
+        std::cout << "Which molecule do you want to request ? - WATER | CARBON DIOXIDE | ALCOHOL | GLUCOSE " << std::endl;
+        std::cout << "Type quit to exit the program " << std::endl;
 
-        if (!(std::cin >> amount)) {//
+        std::cin >> std::ws;
+        std::getline(std::cin, molecule);
+
         
+        if (molecule == "quit") 
+        {
+            std::cout << "Exiting the program" << std::endl;
+            break;
+        }
+
+        std::cout << "Enter Amount: ";
+
+        if (!(std::cin >> amount)) {
             std::cin.clear();
             std::cin.ignore(MAX_LINE, '\n');
             std::cout << "Invalid number\n";
@@ -82,29 +72,27 @@ int main(int argc, char* argv[]) {
         std::cin.ignore(MAX_LINE, '\n');
 
         if (molecule.empty()){
-        
             std::cout << "Invalid molecule name\n";
             continue;
         }
 
         std::string request = "DELIVER " + molecule + " " + std::to_string(amount) + "\n";
-        if (sendto(sock, request.c_str(), request.size(), 0,(sockaddr*)&serv, sizeof(serv)) < 0) {
-            
+        if (sendto(sock, request.c_str(), request.size(), 0, (sockaddr*)&serv, sizeof(serv)) < 0) {
             perror("sendto");
             break;
         }
 
         char buffer[MAX_LINE];
+
         socklen_t len = sizeof(serv);
-        ssize_t n = recvfrom(sock, buffer, sizeof(buffer) - 1, 0,(sockaddr*)&serv, &len);
+        
+        ssize_t n = recvfrom(sock, buffer, sizeof(buffer) - 1, 0, (sockaddr*)&serv, &len);
         
         if (n > 0) {
-            
             buffer[n] = '\0';
             std::cout << "Response: " << buffer;
         } 
         else if (n < 0) {
-            
             perror("recvfrom");
             break;
         }

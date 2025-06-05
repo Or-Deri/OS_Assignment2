@@ -120,6 +120,7 @@ int main(int argc, char *argv[]) {
 
         sockaddr_un addr{};
         addr.sun_family = AF_UNIX;
+        
         strncpy(addr.sun_path, uds_path.c_str(), sizeof(addr.sun_path) - 1);
 
         if (connect(sock, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) < 0) {

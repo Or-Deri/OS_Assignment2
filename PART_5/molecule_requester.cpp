@@ -150,6 +150,7 @@ int main(int argc, char *argv[])
             std::cout << "Invalid number\n";
             continue;
         }
+        
         std::string cmd = "DELIVER " + mol + " " + std::to_string(amt) + "\n";
         if (sendto(sock, cmd.c_str(), cmd.size(), 0, (sockaddr *)&addr, addrlen) < 0)
         {

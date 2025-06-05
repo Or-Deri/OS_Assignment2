@@ -10,7 +10,8 @@
 
 static const size_t MAX_LINE = 1024;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) 
+{
     if (argc != 3) {
         std::cerr << "Usage: " << argv[0] << " <hostname/IP> <port>\n";
         return 1;

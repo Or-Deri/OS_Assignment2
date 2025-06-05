@@ -12,9 +12,6 @@
 #include <sys/select.h>
 #include "../WareHouse/WareHouse.hpp"
 #include <signal.h>
-
-
-// gcov -b atom_warehouse-atom_warehouse.gcno
 // Maximum line length we expect from a client
 static const size_t MAX_LINE = 1024;
 
@@ -27,6 +24,7 @@ int main(int argc, char *argv[])
 {
 
     signal(SIGINT, handle_sigint);
+    
     if (argc != 2)
     {
         std::cerr << "Usage: " << argv[0] << " <port>\n";

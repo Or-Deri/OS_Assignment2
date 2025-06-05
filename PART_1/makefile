@@ -1,20 +1,21 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -g -fprofile-arcs -ftest-coverage
-INCLUDE = -I../WareHouse
+CXXFLAGS = -std=c++17 -Wall -Wextra -g
+GCOVFLAGS = --coverage
 
-TARGET1 = atom_warehouse
-TARGET2 = atom_supplier
+SOURCES = atom_supplier.cpp molecule_requester.cpp drinks_bar.cpp 
+TARGETS = $(SOURCES:.cpp=)
 
+all: $(TARGETS)
 
-all: $(TARGET1) $(TARGET2)
+coverage: CXXFLAGS += $(GCOVFLAGS)
+coverage: clean all
 
-$(TARGET1): atom_warehouse.cpp ../WareHouse/WareHouse.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $^
-
-$(TARGET2): atom_supplier.cpp
-	$(CXX) $(CXXFLAGS) -o $@ $^
+gcov:
+	@for file in $(SOURCES); do \
+		[ -f $${file%.cpp}.gcda ] && gcov $$file; \
+	done
 
 clean:
-	rm -f $(TARGET1) $(TARGET2) *.gcno *.gcov *.gcda ;
+	rm -f $(TARGETS) *.o *.gcda *.gcno *.gcov
 
-.PHONY: all run clean
+.PHONY: all coverage gcov clean
