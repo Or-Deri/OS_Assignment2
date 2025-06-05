@@ -1,18 +1,20 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -g
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -fprofile-arcs -ftest-coverage
 INCLUDE = -I../WareHouse
 
-TARGETS = atom_warehouse atom_supplier
+TARGET1 = atom_warehouse
+TARGET2 = atom_supplier
 
-all: $(TARGETS)
 
-atom_warehouse: atom_warehouse.cpp ../WareHouse/WareHouse.cpp ../WareHouse/WareHouse.hpp
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ atom_warehouse.cpp ../WareHouse/WareHouse.cpp
+all: $(TARGET1) $(TARGET2)
 
-atom_supplier: atom_supplier.cpp
-	$(CXX) $(CXXFLAGS) -o $@ atom_supplier.cpp
+$(TARGET1): atom_warehouse.cpp ../WareHouse/WareHouse.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $^
+
+$(TARGET2): atom_supplier.cpp
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 clean:
-	rm -f $(TARGETS)
+	rm -f $(TARGET1) $(TARGET2) *.gcno *.gcov *.gcda ;
 
-.PHONY: all clean
+.PHONY: all run clean

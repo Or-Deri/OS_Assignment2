@@ -29,7 +29,6 @@ WareHouse can supply the following molecules -
 
 class Warehouse {
 private:
-
     std::unordered_map<std::string, unsigned long long> atoms;
     mutable std::mutex mtx;
 
@@ -55,6 +54,14 @@ public:
 
     int build_drink_amount(const std::string& drink_type) const;
 
+
+    unsigned long long get_CARBON() const;
+
+    unsigned long long get_OXYGEN() const;
+
+    unsigned long long get_HYDROGEN() const;
+
+    bool set_atoms(const std::string &type, unsigned long long amount);
 };
 
 #endif

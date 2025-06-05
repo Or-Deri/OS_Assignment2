@@ -1,0 +1,138 @@
+        -:    0:Source:atom_supplier.cpp
+        -:    0:Graph:atom_supplier.gcno
+        -:    0:Data:atom_supplier.gcda
+        -:    0:Runs:1
+        -:    1:#include <iostream>
+        -:    2:#include <string>
+        -:    3:#include <cstdlib>
+        -:    4:#include <unistd.h>
+        -:    5:#include <arpa/inet.h>
+        -:    6:#include <sys/socket.h>
+        -:    7:#include <limits>
+        -:    8:#include <netdb.h>
+        -:    9:#include <cstring>
+        -:   10:
+        -:   11:static const size_t MAX_LINE = 1024;
+        -:   12:
+        1:   13:int main(int argc, char* argv[]) {
+        1:   14:    if (argc != 3) {
+    #####:   15:        std::cerr << "Usage: " << argv[0] << " <hostname/IP> <port>\n";
+    #####:   16:        return 1;
+        -:   17:    }
+        -:   18:
+        1:   19:    const char* host = argv[1];
+        1:   20:    int port = std::atoi(argv[2]);
+        -:   21:
+        -:   22:
+        1:   23:    if (port <= 0 || port > 65535) {
+    #####:   24:        std::cerr << "Invalid port number.\n";
+    #####:   25:        return 1;
+        -:   26:    }
+        -:   27:
+        -:   28:    // Create a TCP socket
+        1:   29:    int sock = socket(AF_INET, SOCK_STREAM, 0);
+        1:   30:    if (sock < 0) {
+    #####:   31:        perror("socket");
+    #####:   32:        return 1;
+        -:   33:    }
+        -:   34:
+        -:   35:
+        -:   36:    struct addrinfo hints;
+        -:   37:    struct addrinfo *res, *rp;
+        -:   38:    int err;
+        -:   39:
+        1:   40:    memset(&hints, 0, sizeof(hints));
+        1:   41:    hints.ai_family= AF_INET;     
+        1:   42:    hints.ai_socktype = SOCK_STREAM;   
+        -:   43:
+        1:   44:    err = getaddrinfo(host, argv[2], &hints, &res);
+        1:   45:    if (err != 0) {
+    #####:   46:        std::cerr << "getaddrinfo: " << gai_strerror(err) << "\n";
+    #####:   47:        close(sock);
+    #####:   48:        return 1;
+        -:   49:    }
+        -:   50:
+        -:   51:
+       1*:   52:    for (rp = res; rp != nullptr; rp = rp->ai_next) {
+        -:   53:
+        -:   54:
+        -:   55:        // what is the last argument in th
+        1:   56:        sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+       1*:   57:        if (sock < 0) {
+    #####:   58:            continue;
+        -:   59:        }
+        -:   60:
+        1:   61:        if (connect(sock, rp->ai_addr, rp->ai_addrlen) == 0) {
+        1:   62:            break;
+        -:   63:        }
+        -:   64:
+    #####:   65:        close(sock);
+        -:   66:    }
+        -:   67:
+        1:   68:    if (rp == nullptr) {
+    #####:   69:        std::cerr << "Could not connect to " << host << ":" << port << "\n";
+    #####:   70:        freeaddrinfo(res);
+    #####:   71:        return 1;
+        -:   72:    }
+        -:   73:
+        1:   74:    freeaddrinfo(res);
+        -:   75:    
+        -:   76:    //Interactive loop
+        -:   77:    while (true) {
+        -:   78:        std::cout << "\nSelect atom type:\n"
+        -:   79:        << " 1) HYDROGEN\n"
+        -:   80:        << " 2) OXYGEN\n"
+        -:   81:        << " 3) CARBON\n"
+        -:   82:        << " 4) Exit\n"
+        7:   83:        << "Choice: ";
+        -:   84:
+        -:   85:        int choice;
+        7:   86:        if (!(std::cin >> choice) || choice == 4) {
+        1:   87:            break;
+        -:   88:        }
+        -:   89:
+        6:   90:        std::string type;
+       6*:   91:        switch (choice) {
+        2:   92:            case 1: type = "HYDROGEN"; 
+        2:   93:                break;
+        2:   94:            case 2: type = "OXYGEN";   
+        2:   95:                break;
+        2:   96:            case 3: type = "CARBON";   
+        2:   97:                break;
+    #####:   98:            default:
+    #####:   99:                std::cout << "Invalid option\n";
+    #####:  100:                continue;
+        -:  101:        }
+        -:  102:
+        6:  103:        std::cout << "Enter amount: ";
+        -:  104:        
+        -:  105:        unsigned int amt;
+       6*:  106:        if (!(std::cin >> amt)) {
+    #####:  107:            std::cin.clear();
+    #####:  108:            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    #####:  109:            std::cout << "Invalid number\n";
+    #####:  110:            continue;
+        -:  111:        }
+        -:  112:
+        -:  113:        // Form the command string and send it
+        6:  114:        std::string cmd = "ADD " + type + " " + std::to_string(amt) + "\n";
+        6:  115:        if (send(sock, cmd.c_str(), cmd.size(), 0) < 0) {
+    #####:  116:            perror("send");
+    #####:  117:            break;
+        -:  118:        }
+        -:  119:
+        -:  120:        // Wait for the server response
+        -:  121:        char resp[MAX_LINE];
+        6:  122:        ssize_t n = recv(sock, resp, sizeof(resp) - 1, 0);
+        6:  123:        if (n <= 0) {
+        -:  124:            // n == 0 means server closed the connection
+    #####:  125:            if (n < 0) perror("recv");
+    #####:  126:            break;
+        -:  127:        }
+        6:  128:        resp[n] = '\0';
+        6:  129:        std::cout << "Server response: " << resp;
+       12:  130:    }
+        -:  131:
+        1:  132:    close(sock);
+        1:  133:    return 0;
+        -:  134:}

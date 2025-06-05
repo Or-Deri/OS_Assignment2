@@ -1,19 +1,3 @@
-//
-// atom_warehouse.cpp
-//
-// Part 2: A TCP+UDP server on the same port.
-//   • TCP (SOCK_STREAM): clients send "ADD <ATOM> <amount>\n".
-//       Valid ATOMs are CARBON, OXYGEN, HYDROGEN.
-//       On success, reply "OK\n"; otherwise "ERROR\n".
-//   • UDP (SOCK_DGRAM): clients send "DELIVER <MOLECULE> <amount>\n".
-//       Valid MOLECULEs are WATER, CARBON DIOXIDE, ALCOHOL, GLUCOSE.
-//       On success, deduct atoms (one molecule per unit) and reply
-//       "DELIVERED <MOLECULE> <amount>\n"; otherwise "ERROR\n".
-//
-// Uses select() to multiplex the TCP listening socket, each TCP client
-// socket, and the UDP socket.
-//
-
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -26,7 +10,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/select.h>
-#include "Warehouse.hpp"
+#include "../WareHouse/WareHouse.hpp"
 
 // Maximum line length we expect from a TCP client
 static const size_t MAX_LINE = 1024;
@@ -44,14 +28,17 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    //
-    // 1) Create and bind UDP socket
-    //
+    //Create and bind UDP socket
     int udp_listener = socket(AF_INET, SOCK_DGRAM, 0);
     if (udp_listener < 0) {
         perror("socket(UDP)");
         return 1;
     }
+
+    int opt = 1;  //
+    setsockopt(udp_listener, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));//
+
+
     sockaddr_in udp_addr{};
     udp_addr.sin_family = AF_INET;
     udp_addr.sin_addr.s_addr = INADDR_ANY;
@@ -62,16 +49,16 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    //
-    // 2) Create, bind, and listen on TCP socket
-    //
+
+    // Create, bind, and listen on TCP socket
+
     int listener = socket(AF_INET, SOCK_STREAM, 0);
     if (listener < 0) {
         perror("socket(TCP)");
         close(udp_listener);
         return 1;
     }
-    int opt = 1;
+    
     if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
         perror("setsockopt");
         close(listener);
@@ -97,54 +84,50 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Server listening on port " << port << " (TCP+UDP)...\n";
 
-    //
-    // 3) Set up select()’s fd_sets, INCLUDING STDIN_FILENO
-    //
-    fd_set master_set;
-    fd_set read_set;
-    FD_ZERO(&master_set);
 
+    fd_set master_set;
+    fd_set read_fds;
+    FD_ZERO(&master_set);
     FD_SET(listener, &master_set);
     FD_SET(udp_listener, &master_set);
+
     FD_SET(STDIN_FILENO, &master_set);
-
-    int fd_max = std::max(listener, udp_listener, STDIN_FILENO);
-
-    // Per‐TCP‐client partial‐line buffers
+    int fd_max = listener;
+    if (udp_listener > fd_max){
+        fd_max = udp_listener;
+    }
+    if (STDIN_FILENO > fd_max){
+        fd_max = STDIN_FILENO;
+    }
     std::unordered_map<int, std::string> bufmap;
 
     // Single shared Warehouse instance
     Warehouse warehouse;
 
     while (true) {
-        read_set = master_set;
-        if (select(fd_max + 1, &read_set, nullptr, nullptr, nullptr) < 0) {
+        read_fds = master_set;
+        if (select(fd_max + 1, &read_fds, nullptr, nullptr, nullptr) < 0) {
             perror("select");
             break;
         }
 
-        // 4) Check each fd
+        //  Check each fd
         for (int fd = 0; fd <= fd_max; ++fd) {
-            if (!FD_ISSET(fd, &read_set)) {
+            if (!FD_ISSET(fd, &read_fds)) {
                 continue;
             }
-
-            //
-            // 4.a) UDP request arrived?
-            //
+            if (fd == STDIN_FILENO){
+                continue;
+            }
+            //UDP request arrived
             if (fd == udp_listener) {
+
                 char buffer[MAX_LINE];
                 sockaddr_in client_addr{};
                 socklen_t client_len = sizeof(client_addr);
 
-                ssize_t n = recvfrom(
-                    udp_listener,
-                    buffer,
-                    sizeof(buffer) - 1,
-                    0,
-                    (sockaddr*)&client_addr,
-                    &client_len
-                );
+                ssize_t n = recvfrom(udp_listener,buffer,sizeof(buffer) - 1, 0,(sockaddr*)&client_addr,&client_len);
+                
                 if (n < 0) {
                     perror("recvfrom(UDP)");
                     continue;
@@ -153,20 +136,17 @@ int main(int argc, char* argv[]) {
                 std::string request = buffer;
                 
                 // Trim trailing newline/CR
-                while (!request.empty() &&
-                       (request.back() == '\n' || request.back() == '\r')) {
+                while (!request.empty() && (request.back() == '\n' || request.back() == '\r')) {
                     request.pop_back();
                 }
 
                 // Expect: "DELIVER <MOLECULE> <amount>"
                 if (request.rfind("DELIVER ", 0) != 0) {
                     const char* err = "ERROR\n";
-                    sendto(udp_listener, err, strlen(err), 0,
-                           (sockaddr*)&client_addr, client_len);
+                    sendto(udp_listener, err, strlen(err), 0, (sockaddr*)&client_addr, client_len);
                     continue;
                 }
 
-                // Split into tokens; last token = amount, rest = molecule
                 std::istringstream iss(request);
                 std::vector<std::string> tokens;
 
@@ -174,25 +154,22 @@ int main(int argc, char* argv[]) {
                 while (iss >> tok) {
                     tokens.push_back(tok);
                 }
-                if (tokens.size() < 2) {
+                if (tokens.size() < 3) {
                     const char* err = "ERROR\n";
-                    sendto(udp_listener, err, strlen(err), 0,
-                           (sockaddr*)&client_addr, client_len);
+                    sendto(udp_listener, err, strlen(err), 0,(sockaddr*)&client_addr, client_len);
                     continue;
                 }
 
-                // Parse amount (last token)
+                // Parse amount last token
                 unsigned long long amt = 0;
                 try {
                     amt = std::stoull(tokens.back());
                 } catch (...) {
                     const char* err = "ERROR\n";
-                    sendto(udp_listener, err, strlen(err), 0,
-                           (sockaddr*)&client_addr, client_len);
+                    sendto(udp_listener, err, strlen(err), 0,(sockaddr*)&client_addr, client_len);
                     continue;
                 }
 
-                // Reconstruct full molecule name from tokens[1]..tokens[size-2]
                 std::string mol_type = tokens[1];
                 for (size_t i = 2; i + 1 < tokens.size(); ++i) {
                     mol_type += " " + tokens[i];
@@ -202,7 +179,7 @@ int main(int argc, char* argv[]) {
                 bool success = true;
 
                 for (unsigned long long i = 0; i < amt; ++i) {
-                    if (!warehouse.build_molecule(mol_type)) {
+                    if (!warehouse.build_molecules(mol_type)) {
                         success = false;
                         break;
                     }
@@ -210,21 +187,22 @@ int main(int argc, char* argv[]) {
 
                 if (success) {
                     std::string resp = "DELIVERED " + mol_type + " " + std::to_string(amt) + "\n";
-                    sendto(udp_listener, resp.c_str(), resp.size(), 0,
-                           (sockaddr*)&client_addr, client_len);
+                    sendto(udp_listener, resp.c_str(), resp.size(), 0,(sockaddr*)&client_addr, client_len);
+                    warehouse.print_state();
                 } else {
                     const char* err = "ERROR\n";
-                    sendto(udp_listener, err, strlen(err), 0,
-                           (sockaddr*)&client_addr, client_len);
+                    sendto(udp_listener, err, strlen(err), 0,(sockaddr*)&client_addr, client_len);
+                    warehouse.print_state();
                 }
             }
-            //
-            // 4.b) TCP listener ready? Accept new connection
-            //
+
+            
+            //if TCP listener ready Accept new connection
             else if (fd == listener) {
                 sockaddr_in client_addr{};
                 socklen_t client_len = sizeof(client_addr);
                 int client_fd = accept(listener, (sockaddr*)&client_addr, &client_len);
+                
                 if (client_fd < 0) {
                     perror("accept(TCP)");
                     continue;
@@ -238,7 +216,7 @@ int main(int argc, char* argv[]) {
             //
             // 4.c) Existing TCP client ready? Read data
             //
-            else if (fd != STDIN_FILENO) {
+            else {
                 char tmpbuf[512];
                 ssize_t nbytes = recv(fd, tmpbuf, sizeof(tmpbuf) - 1, 0);
                 if (nbytes <= 0) {
@@ -254,7 +232,7 @@ int main(int argc, char* argv[]) {
 
                     // Process all complete lines ending in '\n'
                     size_t pos;
-                    while ((pos = bufmap[fd].find('\n')) != std::string::npos) {
+                    while ((pos = bufmap[fd].find('\n')) != std::string::npos){
                         std::string line = bufmap[fd].substr(0, pos);
                         bufmap[fd].erase(0, pos + 1);
 
@@ -263,47 +241,88 @@ int main(int argc, char* argv[]) {
                             line.pop_back();
                         }
 
-                        // Parse "ADD <ATOM> <amount>"
-                        std::istringstream iss(line);
-                        std::string cmd, atom_type;
-                        unsigned long long amt;
-                        bool success = false;
 
-                        if ((iss >> cmd >> atom_type >> amt) && cmd == "ADD") {
-                            if (warehouse.is_valid_atom(atom_type)) {
-                                if (warehouse.add_atom(atom_type, static_cast<unsigned int>(amt))) {
-                                    success = true;
-                                }
+                        std::istringstream iss(line);
+                        std::string cmd;
+                        iss >> cmd;
+
+                        if (cmd == "ADD") {
+                            std::string atom_type;
+                            unsigned long long amt = 0;
+                            bool success = false;
+
+                            if ((iss >> atom_type >> amt) && warehouse.is_valid_atom(atom_type)) {
+                                success = warehouse.add_atom(atom_type, static_cast<unsigned int>(amt));
                             }
+                            const char* resp = success ? "OK\n" : "ERROR\n";
+                            send(fd, resp, std::strlen(resp), 0);
+                            warehouse.print_state();
+                        }
+                        else if (cmd == "GEN") {
+                            
+                            std::string drink_type;
+                            std::getline(iss, drink_type);
+                            if (!drink_type.empty() && drink_type.front() == ' ')
+                                drink_type.erase(0, 1);
+
+                            if (drink_type == "CHAMPAGNE" || drink_type == "VODKA" || drink_type == "SOFT DRINK") {
+                                int maxd = warehouse.build_drink_amount(drink_type);
+                                std::string resp = std::to_string(maxd) + "\n";
+                                send(fd, resp.c_str(), resp.size(), 0);
+                            } else {
+                                send(fd, "ERROR\n", 6, 0);
+                            }
+
+                        }
+                        else {
+                            send(fd, "ERROR\n", 6, 0);
                         }
 
-                        const char* resp = success ? "OK\n" : "ERROR\n";
-                        send(fd, resp, std::strlen(resp), 0);
                     }
                 }
             }
+        }
 
-            // GEN PART
-            else {
-                std::string input;
-                if (!std::getline(std::cin, line)) 
-                {
-                    continue;
-                }
-                 while (!line.empty() && (line.back() == '\r' || line.back() == '\n')) {
-                    line.pop_back();
-                }
-                if (line.rfind("GEN ", 0) != 0) {
-                    std::cout << "Invalid command\n";
-                    continue;
-                }
-                std::string drink = line.substr(4);
 
-                int can_build = warehouse.build_drink_amont(drink);
+        if (FD_ISSET(STDIN_FILENO, &read_fds)) {
 
-                std::cout << "Can make " << can_build << " " << drink << endl;
+
+            std::string line;
+            if (std::getline(std::cin, line)) {
+                std::istringstream iss(line);
+                std::string cmd;
+                iss >> cmd;
+
+                if (cmd == "ADD") {
+                    std::string atom_type;
+                    unsigned long long amt = 0;
+                    bool success = false;
+                    if ((iss >> atom_type >> amt) && warehouse.is_valid_atom(atom_type)) {
+                        success = warehouse.add_atom(atom_type, static_cast<unsigned int>(amt));
+                    }
+                    std::cout << (success ? "OK\n" : "ERROR\n");
+                    warehouse.print_state();
+                }
+                else if (cmd == "GEN") {
+                    std::string drink_type;
+                    std::getline(iss, drink_type);
+                    if (!drink_type.empty() && drink_type.front() == ' ')
+                        drink_type.erase(0, 1);
+
+                    if (drink_type == "CHAMPAGNE" || drink_type == "VODKA" || drink_type == "SOFT DRINK") {
+                        int maxd = warehouse.build_drink_amount(drink_type);
+                        std::cout << maxd << "\n";
+                    } else {
+                        std::cout << "ERROR\n";
+                    }
+                    
+                }
+                else {
+                    std::cout << "ERROR\n";
+                }
             }
         }
+
     }
 
     // Cleanup
